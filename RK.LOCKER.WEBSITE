@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RK Secure Locker</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #06191b;
+    color: white;
+}
+
+header {
+    background: #09282b;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #1d5557;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.rk {
+    background: #18b9a5;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 30px 20px;
+}
+
+.card {
+    background: #0b272a;
+    border: 1px solid #205356;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 20px;
+}
+
+.login {
+    max-width: 450px;
+    margin: 70px auto;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 7px 0 15px;
+    background: #071b1d;
+    color: white;
+    border: 1px solid #286062;
+    border-radius: 8px;
+}
+
+button {
+    padding: 11px 16px;
+    border-radius: 8px;
+    border: 1px solid #286062;
+    background: #103638;
+    color: white;
+    cursor: pointer;
+    margin: 3px;
+}
+
+button:hover {
+    background: #165154;
+}
+
+.primary {
+    background: #10a995;
+    border: none;
+}
+
+.danger {
+    background: #8d3030;
+}
+
+.link {
+    background: none;
+    border: none;
+    color: #62e8d5;
+}
+
+.hidden {
+    display: none;
+}
+
+.toolbar {
+    display: grid;
+    grid-template-columns: 1fr 160px 160px auto;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.stat {
+    background: #071d20;
+    padding: 18px;
+    border-radius: 10px;
+    border: 1px solid #205356;
+}
+
+.stat strong {
+    font-size: 22px;
+}
+
+.progress {
+    width: 100%;
+    height: 8px;
+    background: #12292b;
+    margin-top: 10px;
+    border-radius: 10px;
+}
+
+.progress div {
+    height: 100%;
+    width: 0;
+    background: #20c9b0;
+    border-radius: 10px;
+}
+
+.upload {
+    border: 2px dashed #286062;
+    padding: 30px;
+    text-align: center;
+    border-radius: 12px;
+}
+
+.files.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 15px;
+}
+
+.files.list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.file {
+    background: #092225;
+    border: 1px solid #205356;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.preview {
+    height: 130px;
+    background: #061719;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 45px;
+}
+
+.preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.file-info {
+    padding: 12px;
+}
+
+.file-name {
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-actions {
+    padding: 8px;
+    border-top: 1px solid #174346;
+}
+
+.list .file {
+    display: grid;
+    grid-template-columns: 70px 1fr auto;
+    align-items: center;
+}
+
+.list .preview {
+    height: 70px;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-box {
+    background: #0b272a;
+    border: 1px solid #286062;
+    border-radius: 15px;
+    padding: 25px;
+    width: 90%;
+    max-width: 650px;
+    max-height: 90vh;
+    overflow: auto;
+}
+
+.modal img {
+    max-width: 100%;
+}
+
+.modal iframe {
+    width: 100%;
+    height: 500px;
+    border: none;
+}
+
+.modal pre {
+    white-space: pre-wrap;
+}
+
+@media(max-width:700px) {
+    .toolbar,
+    .stats {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">
+        <span class="rk">RK</span>
+        <span>RK Secure Locker</span>
+    </div>
+
+    <div id="userArea" class="hidden">
+        <span id="currentUser"></span>
+        <button onclick="logout()">Logout</button>
+    </div>
+</header>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="loginPage" class="card login">
+
+    <h1>Welcome to RK</h1>
+    <p>Secure browser-based file locker</p>
+
+    <div id="loginForm">
+
+        <label>Username</label>
+        <input id="username" placeholder="Username">
+
+        <label>Password</label>
+        <input id="password" type="password" placeholder="Password">
+
+        <button class="primary" onclick="login()">
+            Login
+        </button>
+
+        <button class="link" onclick="showRegister()">
+            Create Account
+        </button>
+
+        <button class="link" onclick="forgotPassword()">
+            Forgot Password?
+        </button>
+
+    </div>
+
+    <!-- REGISTER -->
+    <div id="registerForm" class="hidden">
+
+        <h2>Create Account</h2>
+
+        <label>Username</label>
+        <input id="newUsername">
+
+        <label>Email</label>
+        <input id="newEmail" type="email">
+
+        <label>Password</label>
+        <input id="newPassword" type="password">
+
+        <label>Confirm Password</label>
+        <input id="confirmPassword" type="password">
+
+        <button class="primary" onclick="register()">
+            Register
+        </button>
+
+        <button class="link" onclick="showLogin()">
+            Back to Login
+        </button>
+
+    </div>
+</div>
+
+
+<!-- LOCKER -->
+<div id="lockerPage" class="hidden">
+
+    <div class="card">
+
+        <h1>My RK Locker</h1>
+
+        <p>
+            Welcome,
+            <strong id="welcomeUser"></strong>
+        </p>
+
+        <p>
+            Stored Email:
+            <strong id="storedEmail"></strong>
+        </p>
+
+    </div>
+
+
+    <!-- STORAGE -->
+    <div class="stats">
+
+        <div class="stat">
+            Files
+            <br>
+            <strong id="fileCount">0</strong>
+        </div>
+
+        <div class="stat">
+            Storage Used
+            <br>
+            <strong id="storageUsed">0 KB</strong>
+        </div>
+
+        <div class="stat">
+            Storage
+            <br>
+            <strong>50 MB</strong>
+
+            <div class="progress">
+                <div id="storageBar"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- UPLOAD -->
+    <div class="card">
+
+        <h2>Upload Files</h2>
+
+        <div class="upload">
+
+            <p>
+                Images, PDF, DOC, DOCX, TXT, MD and other files
+            </p>
+
+            <input
+                type="file"
+                id="fileInput"
+                multiple
+                accept="image/*,.pdf,.doc,.docx,.txt,.md,.csv,.json"
+            >
+
+        </div>
+
+    </div>
+
+
+    <!-- SEARCH / FILTER -->
+    <div class="toolbar">
+
+        <input
+            id="searchBox"
+            placeholder="Search files..."
+            oninput="displayFiles()"
+        >
+
+        <select id="typeFilter" onchange="displayFiles()">
+
+            <option value="all">All Types</option>
+            <option value="image">Images</option>
+            <option value="pdf">PDF</option>
+            <option value="document">Documents</option>
+            <option value="text">Text</option>
+
+        </select>
+
+
+        <select id="sortFilter" onchange="displayFiles()">
+
+            <option value="new">Newest First</option>
+            <option value="old">Oldest First</option>
+            <option value="name">Name A-Z</option>
+            <option value="size">Largest First</option>
+
+        </select>
+
+
+        <div>
+            <button id="gridButton"
+                    onclick="setView('grid')">
+                ▦ Grid
+            </button>
+
+            <button onclick="setView('list')">
+                ☷ List
+            </button>
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div style="display:flex;justify-content:space-between">
+
+            <h2>My Files</h2>
+
+            <button class="danger"
+                    onclick="deleteAll()">
+                Delete All
+            </button>
+
+        </div>
+
+        <p id="resultCount"></p>
+
+        <div id="filesContainer"
+             class="files grid">
+        </div>
+
+    </div>
+
+
+    <!-- EMAIL -->
+    <div class="card">
+
+        <h2>Account Email</h2>
+
+        <p id="emailDisplay"></p>
+
+        <button onclick="changeEmail()">
+            Change Email
+        </button>
+
+        <button class="danger"
+                onclick="deleteEmail()">
+            Delete Email
+        </button>
+
+    </div>
+
+</div>
+
+</div>
+
+
+<!-- PREVIEW MODAL -->
+<div id="previewModal" class="modal hidden">
+
+    <div class="modal-box">
+
+        <h2 id="previewTitle"></h2>
+
+        <div id="previewContent"></div>
+
+        <button onclick="closePreview()">
+            Close
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================
+   ACCOUNT
+===================================== */
+
+let account = null;
+let files = [];
+let viewMode = "grid";
+
+function loadAccount() {
+
+    const saved =
+        localStorage.getItem("rkAccount");
+
+    if(saved) {
+        account = JSON.parse(saved);
+    }
+}
+
+
+function saveAccount() {
+
+    localStorage.setItem(
+        "rkAccount",
+        JSON.stringify(account)
+    );
+
+}
+
+
+function register() {
+
+    const username =
+        document.getElementById("newUsername").value.trim();
+
+    const email =
+        document.getElementById("newEmail").value.trim();
+
+    const password =
+        document.getElementById("newPassword").value;
+
+    const confirm =
+        document.getElementById("confirmPassword").value;
+
+
+    if(!username || !email || !password) {
+
+        alert("Please fill all fields");
+        return;
+
+    }
+
+
+    if(password !== confirm) {
+
+        alert("Passwords do not match");
+        return;
+
+    }
+
+
+    if(password.length < 6) {
+
+        alert("Password must contain at least 6 characters");
+        return;
+
+    }
+
+
+    account = {
+
+        username: username,
+        email: email,
+        password: password
+
+    };
+
+
+    saveAccount();
+
+    alert("Account created successfully");
+
+    showLogin();
+
+}
+
+
+function login() {
+
+    loadAccount();
+
+    if(!account) {
+
+        alert("No account found. Please register.");
+        return;
+
+    }
+
+
+    const username =
+        document.getElementById("username").value.trim();
+
+    const password =
+        document.getElementById("password").value;
+
+
+    if(
+        username !== account.username ||
+        password !== account.password
+    ) {
+
+        alert("Invalid username or password");
+        return;
+
+    }
+
+
+    document
+        .getElementById("loginPage")
+        .classList.add("hidden");
+
+    document
+        .getElementById("lockerPage")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("userArea")
+        .classList.remove("hidden");
+
+
+    document.getElementById("currentUser")
+        .textContent = account.username;
+
+    document.getElementById("welcomeUser")
+        .textContent = account.username;
+
+    document.getElementById("storedEmail")
+        .textContent = account.email;
+
+    document.getElementById("emailDisplay")
+        .textContent = account.email;
+
+
+    loadFiles();
+
+}
+
+
+function logout() {
+
+    document
+        .getElementById("lockerPage")
+        .classList.add("hidden");
+
+    document
+        .getElementById("loginPage")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("userArea")
+        .classList.add("hidden");
+
+}
+
+
+/* =====================================
+   LOGIN / REGISTER
+===================================== */
+
+function showRegister() {
+
+    document
+        .getElementById("loginForm")
+        .classList.add("hidden");
+
+    document
+        .getElementById("registerForm")
+        .classList.remove("hidden");
+
+}
+
+
+function showLogin() {
+
+    document
+        .getElementById("registerForm")
+        .classList.add("hidden");
+
+    document
+        .getElementById("loginForm")
+        .classList.remove("hidden");
+
+}
+
+
+/* =====================================
+   FORGOT PASSWORD
+===================================== */
+
+function forgotPassword() {
+
+    loadAccount();
+
+    if(!account) {
+
+        alert("No registered account found.");
+        return;
+
+    }
+
+
+    const username =
+        prompt("Enter your username:");
+
+    if(username !== account.username) {
+
+        alert("Username does not match.");
+        return;
+
+    }
+
+
+    const email =
+        prompt("Enter your registered email:");
+
+    if(email.toLowerCase() !== account.email.toLowerCase()) {
+
+        alert("Email does not match.");
+        return;
+
+    }
+
+
+    const newPassword =
+        prompt("Enter your new password:");
+
+    if(!newPassword || newPassword.length < 6) {
+
+        alert("Password must contain at least 6 characters.");
+        return;
+
+    }
+
+
+    account.password = newPassword;
+
+    saveAccount();
+
+    alert("Password reset successfully!");
+
+}
+
+
+/* =====================================
+   FILE STORAGE
+===================================== */
+
+function loadFiles() {
+
+    const saved =
+        localStorage.getItem("rkFiles");
+
+    if(saved) {
+
+        files = JSON.parse(saved);
+
+    } else {
+
+        files = [];
+
+    }
+
+    displayFiles();
+
+}
+
+
+function saveFiles() {
+
+    localStorage.setItem(
+        "rkFiles",
+        JSON.stringify(files)
+    );
+
+}
+
+
+/* =====================================
+   FILE UPLOAD
+===================================== */
+
+document
+    .getElementById("fileInput")
+    .addEventListener("change", function() {
+
+        const selected =
+            [...this.files];
+
+        selected.forEach(file => {
+
+            const reader =
+                new FileReader();
+
+            reader.onload = function(e) {
+
+                files.push({
+
+                    id:
+                        Date.now() +
+                        Math.random(),
+
+                    name:
+                        file.name,
+
+                    size:
+                        file.size,
+
+                    type:
+                        file.type,
+
+                    date:
+                        Date.now(),
+
+                    data:
+                        e.target.result
+
+                });
+
+
+                saveFiles();
+
+                displayFiles();
+
+            };
+
+
+            reader.readAsDataURL(file);
+
+        });
+
+    });
+
+
+/* =====================================
+   FILE TYPE
+===================================== */
+
+function getFileType(file) {
+
+    if(file.type.startsWith("image/")) {
+
+        return "image";
+
+    }
+
+    if(file.type === "application/pdf") {
+
+        return "pdf";
+
+    }
+
+    if(
+        file.name.endsWith(".doc") ||
+        file.name.endsWith(".docx")
+    ) {
+
+        return "document";
+
+    }
+
+    if(
+        file.type.startsWith("text/") ||
+        file.name.endsWith(".txt") ||
+        file.name.endsWith(".md") ||
+        file.name.endsWith(".csv") ||
+        file.name.endsWith(".json")
+    ) {
+
+        return "text";
+
+    }
+
+    return "other";
+
+}
+
+
+/* =====================================
+   DISPLAY FILES
+===================================== */
+
+function displayFiles() {
+
+    const container =
+        document.getElementById("filesContainer");
+
+    container.className =
+        "files " + viewMode;
+
+    container.innerHTML = "";
+
+
+    const search =
+        document
+            .getElementById("searchBox")
+            .value
+            .toLowerCase();
+
+
+    const type =
+        document
+            .getElementById("typeFilter")
+            .value;
+
+
+    let result =
+        files.filter(file => {
+
+            const matchesSearch =
+                file.name
+                    .toLowerCase()
+                    .includes(search);
+
+
+            const matchesType =
+                type === "all" ||
+                getFileType(file) === type;
+
+
+            return matchesSearch &&
+                   matchesType;
+
+        });
+
+
+    const sort =
+        document
+            .getElementById("sortFilter")
+            .value;
+
+
+    if(sort === "new") {
+
+        result.sort(
+            (a,b) => b.date - a.date
+        );
+
+    }
+
+    if(sort === "old") {
+
+        result.sort(
+            (a,b) => a.date - b.date
+        );
+
+    }
+
+    if(sort === "name") {
+
+        result.sort(
+            (a,b) =>
+                a.name.localeCompare(b.name)
+        );
+
+    }
+
+    if(sort === "size") {
+
+        result.sort(
+            (a,b) => b.size - a.size
+        );
+
+    }
+
+
+    document.getElementById("resultCount")
+        .textContent =
+        result.length +
+        " file(s) found";
+
+
+    result.forEach(file => {
+
+        createFileCard(
+            file,
+            container
+        );
+
+    });
+
+
+    updateStorage();
+
+}
+
+
+/* =====================================
+   FILE CARD
+===================================== */
+
+function createFileCard(file, container) {
+
+    const card =
+        document.createElement("div");
+
+    card.className = "file";
+
+
+    const preview =
+        document.createElement("div");
+
+    preview.className = "preview";
+
+
+    const type =
+        getFileType(file);
+
+
+    if(type === "image") {
+
+        const img =
+            document.createElement("img");
+
+        img.src = file.data;
+
+        preview.appendChild(img);
+
+    }
+
+    else if(type === "pdf") {
+
+        preview.textContent = "📕";
+
+    }
+
+    else if(type === "document") {
+
+        preview.textContent = "📄";
+
+    }
+
+    else if(type === "text") {
+
+        preview.textContent = "📝";
+
+    }
+
+    else {
+
+        preview.textContent = "📦";
+
+    }
+
+
+    const info =
+        document.createElement("div");
+
+    info.className = "file-info";
+
+
+    const name =
+        document.createElement("div");
+
+    name.className = "file-name";
+
+    name.textContent =
+        file.name;
+
+
+    const meta =
+        document.createElement("small");
+
+    meta.textContent =
+        getFileType(file).toUpperCase()
+        + " • "
+        + formatBytes(file.size)
+        + " • "
+        + new Date(file.date)
+            .toLocaleDateString();
+
+
+    info.appendChild(name);
+    info.appendChild(meta);
+
+
+    const actions =
+        document.createElement("div");
+
+    actions.className =
+        "file-actions";
+
+
+    const previewButton =
+        document.createElement("button");
+
+    previewButton.textContent =
+        "Preview";
+
+    previewButton.onclick =
+        () => previewFile(file);
+
+
+    const downloadButton =
+        document.createElement("button");
+
+    downloadButton.textContent =
+        "Download";
+
+    downloadButton.onclick =
+        () => downloadFile(file);
+
+
+    const deleteButton =
+        document.createElement("button");
+
+    deleteButton.textContent =
+        "Delete";
+
+    deleteButton.className =
+        "danger";
+
+    deleteButton.onclick =
+        () => deleteFile(file.id);
+
+
+    actions.appendChild(previewButton);
+    actions.appendChild(downloadButton);
+    actions.appendChild(deleteButton);
+
+
+    card.appendChild(preview);
+    card.appendChild(info);
+    card.appendChild(actions);
+
+
+    container.appendChild(card);
+
+}
+
+
+/* =====================================
+   PREVIEW
+===================================== */
+
+function previewFile(file) {
+
+    const modal =
+        document.getElementById("previewModal");
+
+    const content =
+        document.getElementById("previewContent");
+
+    document.getElementById("previewTitle")
+        .textContent = file.name;
+
+
+    content.innerHTML = "";
+
+
+    const type =
+        getFileType(file);
+
+
+    if(type === "image") {
+
+        const img =
+            document.createElement("img");
+
+        img.src = file.data;
+
+        content.appendChild(img);
+
+    }
+
+    else if(type === "pdf") {
+
+        const iframe =
+            document.createElement("iframe");
+
+        iframe.src = file.data;
+
+        content.appendChild(iframe);
+
+    }
+
+    else if(type === "text") {
+
+        const pre =
+            document.createElement("pre");
+
+        fetch(file.data)
+            .then(response => response.text())
+            .then(text => {
+
+                pre.textContent = text;
+
+            });
+
+        content.appendChild(pre);
+
+    }
+
+    else {
+
+        content.innerHTML =
+            "<p>Preview is not available for this file type.</p>";
+
+    }
+
+
+    modal.classList.remove("hidden");
+
+}
+
+
+function closePreview() {
+
+    document
+        .getElementById("previewModal")
+        .classList.add("hidden");
+
+}
+
+
+/* =====================================
+   DOWNLOAD
+===================================== */
+
+function downloadFile(file) {
+
+    const link =
+        document.createElement("a");
+
+    link.href = file.data;
+
+    link.download =
+        file.name;
+
+    link.click();
+
+}
+
+
+/* =====================================
+   DELETE
+===================================== */
+
+function deleteFile(id) {
+
+    const file =
+        files.find(f => f.id === id);
+
+
+    if(!file) return;
+
+
+    const confirmDelete =
+        confirm(
+            'Are you sure you want to delete "' +
+            file.name +
+            '"?'
+        );
+
+
+    if(!confirmDelete) return;
+
+
+    files =
+        files.filter(
+            f => f.id !== id
+        );
+
+
+    saveFiles();
+
+    displayFiles();
+
+}
+
+
+function deleteAll() {
+
+    if(files.length === 0) {
+
+        alert("No files to delete.");
+        return;
+
+    }
+
+
+    if(
+        confirm(
+            "Are you sure you want to delete ALL files?"
+        )
+    ) {
+
+        files = [];
+
+        saveFiles();
+
+        displayFiles();
+
+    }
+
+}
+
+
+/* =====================================
+   STORAGE
+===================================== */
+
+function updateStorage() {
+
+    let total = 0;
+
+    files.forEach(file => {
+
+        total += file.size;
+
+    });
+
+
+    document.getElementById("fileCount")
+        .textContent = files.length;
+
+
+    document.getElementById("storageUsed")
+        .textContent = formatBytes(total);
+
+
+    const percentage =
+        Math.min(
+            (total / (50 * 1024 * 1024)) * 100,
+            100
+        );
+
+
+    document.getElementById("storageBar")
+        .style.width =
+        percentage + "%";
+
+}
+
+
+function formatBytes(bytes) {
+
+    if(bytes === 0)
+        return "0 B";
+
+    const units =
+        ["B","KB","MB","GB"];
+
+    const i =
+        Math.floor(
+            Math.log(bytes) /
+            Math.log(1024)
+        );
+
+    return (
+        bytes /
+        Math.pow(1024,i)
+    ).toFixed(2)
+    + " "
+    + units[i];
+
+}
+
+
+/* =====================================
+   GRID / LIST
+===================================== */
+
+function setView(mode) {
+
+    viewMode = mode;
+
+    displayFiles();
+
+}
+
+
+/* =====================================
+   EMAIL
+===================================== */
+
+function changeEmail() {
+
+    const email =
+        prompt(
+            "Enter new email:",
+            account.email
+        );
+
+
+    if(email) {
+
+        account.email =
+            email;
+
+        saveAccount();
+
+
+        document.getElementById("storedEmail")
+            .textContent = email;
+
+        document.getElementById("emailDisplay")
+            .textContent = email;
+
+    }
+
+}
+
+
+function deleteEmail() {
+
+    if(
+        !confirm(
+            "Delete stored email?"
+        )
+    ) return;
+
+
+    account.email = "";
+
+    saveAccount();
+
+
+    document.getElementById("storedEmail")
+        .textContent = "No email saved";
+
+    document.getElementById("emailDisplay")
+        .textContent = "No email saved";
+
+}
+
+
+/* =====================================
+   START
+===================================== */
+
+loadAccount();
+
+</script>
+
+</body>
+</html>
